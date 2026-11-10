@@ -12,9 +12,9 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Extract Project Files & Auto-Fix
+      - name: Extract Project Files & Auto-Fix Syntax
         run: |
-          # 1. Unzip any zip file
+          # 1. Unzip
           unzip -o *.zip || true
 
           # 2. Support both folder names
@@ -34,7 +34,10 @@ jobs:
             fi
           fi
 
-          # 4. Auto-fix dependency version numbers
+          # 4. Clean any escaped quote syntax in Kotlin files
+          find . -name "*.kt" -exec sed -i 's/\\\"/\"/g' {} + 2>/dev/null || true
+
+          # 5. Auto-fix dependency version numbers
           find . -name "build.gradle.kts" -exec sed -i 's/room-runtime:"/room-runtime:2.6.1"/g' {} +
           find . -name "build.gradle.kts" -exec sed -i 's/room-ktx:"/room-ktx:2.6.1"/g' {} +
           find . -name "build.gradle.kts" -exec sed -i 's/room-compiler:"/room-compiler:2.6.1"/g' {} +
