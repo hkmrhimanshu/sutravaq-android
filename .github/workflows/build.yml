@@ -12,13 +12,29 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Extract SUTRAVAQ Project & Auto-Fix Versions
+      - name: Extract Project Files & Auto-Fix
         run: |
+          # 1. Unzip any zip file
           unzip -o *.zip || true
-          if [ -d "sutravaq-android" ]; then
-            cp -rn sutravaq-android/* . || cp -r sutravaq-android/* .
+
+          # 2. Support both folder names
+          if [ -d "sutravaq-android-project" ]; then
+            cp -r sutravaq-android-project/* .
           fi
-          # Auto-fix dependency version strings
+          if [ -d "sutravaq-android" ]; then
+            cp -r sutravaq-android/* .
+          fi
+
+          # 3. Fallback: auto-detect project root
+          if [ ! -f "settings.gradle.kts" ]; then
+            SETTINGS_PATH=$(find . -name "settings.gradle.kts" | head -n 1)
+            if [ -n "$SETTINGS_PATH" ]; then
+              PROJECT_FOLDER=$(dirname "$SETTINGS_PATH")
+              cp -r "$PROJECT_FOLDER"/* .
+            fi
+          fi
+
+          # 4. Auto-fix dependency version numbers
           find . -name "build.gradle.kts" -exec sed -i 's/room-runtime:"/room-runtime:2.6.1"/g' {} +
           find . -name "build.gradle.kts" -exec sed -i 's/room-ktx:"/room-ktx:2.6.1"/g' {} +
           find . -name "build.gradle.kts" -exec sed -i 's/room-compiler:"/room-compiler:2.6.1"/g' {} +
